@@ -1,0 +1,341 @@
+Build a full-stack web application called **RedPath Sentinel**.
+
+This project is a portfolio cybersecurity tool that combines a mini BloodHound-style graph, an identity attack path simulator, an Nmap scan visualizer, and a red team difficulty scoring system. The goal is to show how blue team IAM knowledge can be used to understand red team attack paths in a safe homelab environment.
+
+The application should be safe, educational, and defensive. Do not include exploit commands, malware, credential theft, real attack automation, or instructions to compromise real systems. The app should identify possible weaknesses, explain why they matter, and provide blue team remediation guidance.
+
+Use Replit-friendly technologies:
+
+* Frontend: React + TypeScript
+* Backend: Node.js + Express
+* Styling: Tailwind CSS or clean CSS
+* Graph library: React Flow, Cytoscape.js, or another interactive graph library
+* Data storage: local JSON files or SQLite
+* File upload support for Nmap XML files
+
+Main application name:
+**RedPath Sentinel**
+
+Purpose:
+Create an interactive cybersecurity dashboard where a user can upload an Nmap XML scan from a homelab, visualize hosts and services as nodes in a graph, click each host to view details, see possible weaknesses, receive a red team difficulty score, and simulate identity-based attack paths between a starting identity and a target system.
+
+Core pages/features:
+
+1. **Dashboard Overview**
+   Create a main dashboard with summary cards:
+
+* Total hosts discovered
+* Total open ports
+* High-risk services
+* Identity risks found
+* Easy targets
+* Medium targets
+* Hard targets
+* Total possible attack paths
+
+2. **Nmap XML Upload**
+   Create an upload page or upload section where the user can upload an Nmap XML file.
+
+The app should parse the Nmap XML and extract:
+
+* IP address
+* Hostname if available
+* Host status
+* Open ports
+* Protocol
+* Service name
+* Product/version if available
+* OS guess if available
+* MAC address if available
+
+After upload, store the parsed scan data in app state and/or local JSON/SQLite storage.
+
+3. **Interactive Graph View**
+   Create a mini BloodHound-style interactive graph.
+
+The graph should show:
+
+* Host nodes
+* Service/port nodes
+* Identity/user nodes
+* Group nodes
+* Privilege/risk nodes
+* Target nodes
+
+Suggested node types:
+
+* Host
+* Service
+* User
+* Group
+* Admin
+* Weakness
+* Target
+
+Suggested edges:
+
+* Host “exposes” Service
+* Service “may indicate” Weakness
+* User “member of” Group
+* Group “has access to” Host
+* User “can authenticate to” Host
+* Weakness “increases risk of” Host
+* Host “path to” Target
+
+Make the graph interactive:
+
+* User can click a node
+* A side details panel opens
+* The selected node is highlighted
+* The panel shows details, weaknesses, difficulty score, and defensive recommendations
+
+4. **Host Details Panel**
+   When a host node is clicked, show:
+
+* IP address
+* Hostname
+* OS guess
+* Open ports
+* Services
+* Service versions
+* Risk observations
+* Possible weaknesses
+* Red team difficulty score
+* Blue team recommendations
+
+Example weakness mapping:
+
+* Port 22 SSH: Check for key-based authentication, disable password login if possible, review failed login attempts, enforce MFA where possible
+* Port 80/443 HTTP/HTTPS: Check default pages, outdated software, weak TLS, exposed admin panels
+* Port 445 SMB: Check SMB signing, guest access, share permissions, outdated Windows systems
+* Port 3389 RDP: Check exposure, MFA, account lockout policy, restricted admin access
+* Port 389/636 LDAP/LDAPS: Check anonymous binds, LDAP signing, domain exposure
+* Port 53 DNS: Check zone transfer, recursion settings, DNS misconfiguration
+* Port 21 FTP: Check anonymous login, cleartext credentials, outdated FTP service
+* Port 3306 MySQL / 5432 PostgreSQL / 1433 MSSQL: Check exposed database access, weak authentication, unnecessary exposure
+
+Do not provide exploitation commands. Only provide risk explanations and defensive checks.
+
+5. **Red Team Difficulty Score**
+   Create a scoring engine that labels each host as:
+
+* Easy
+* Medium
+* Hard
+
+The score should be based on:
+
+* Number of open ports
+* Presence of high-risk services
+* Exposed remote access services
+* Missing MFA flag from identity data
+* Privileged users linked to the host
+* Dormant accounts linked to the host
+* Service accounts linked to the host
+* Whether the host appears to be a domain controller, server, workstation, or unknown
+
+Example scoring logic:
+
+* Easy: multiple high-risk services, remote access exposed, weak IAM conditions, privileged/dormant accounts linked
+* Medium: some risky services and some IAM risk
+* Hard: few exposed services, no obvious IAM risk, MFA enabled, least privilege
+
+Show the score visually in the UI and explain why the score was assigned.
+
+6. **Identity Attack Path Simulator**
+   Create a page or section called **Identity Attack Path Simulator**.
+
+The user should be able to select:
+
+* Starting identity
+* Target host or target privilege level
+
+Example starting identities:
+
+* Low Privilege User
+* Helpdesk User
+* Dormant Account
+* Service Account
+* Local Admin
+* Domain Admin
+
+Example target:
+
+* Workstation
+* File Server
+* Domain Controller
+* Admin Group
+* Sensitive Application
+
+The app should generate a simulated attack path based on graph relationships and risk rules.
+
+Example safe path output:
+“Dormant Account → Member of Helpdesk Group → Can reset passwords → Has access to File Server → File Server has SMB exposed → Possible path to Sensitive Data”
+
+The app should explain:
+
+* Why the path matters
+* Which identity/control weaknesses are involved
+* How a defender could reduce the risk
+
+Do not include real exploitation steps.
+
+7. **Built-in Demo Data**
+   Include sample/demo data so the app works even before uploading an Nmap file.
+
+Demo data should include:
+
+* 5 hosts
+* 8 users
+* 4 groups
+* Several services
+* Several identity risks
+
+Example demo objects:
+
+* User: jsmith, low privilege, MFA enabled
+* User: vendor_old, dormant, MFA disabled
+* User: helpdesk01, helpdesk group, password reset rights
+* User: svc_backup, service account, high privilege
+* Group: Domain Admins
+* Group: Helpdesk
+* Group: File Share Admins
+* Host: DC01, domain controller, LDAP/Kerberos/SMB
+* Host: FILE01, file server, SMB
+* Host: WEB01, web server, HTTP/HTTPS
+* Host: WORKSTATION01, RDP
+* Host: DB01, database server
+
+8. **Weakness Rule Engine**
+   Create a simple rules file or rules object that maps ports/services to security observations.
+
+Each rule should include:
+
+* Port
+* Service
+* Risk level
+* Observation
+* Why it matters
+* Blue team recommendation
+
+Example:
+Port 445 / SMB:
+Risk level: High
+Observation: SMB is exposed.
+Why it matters: SMB can expose file shares and may reveal sensitive access paths if permissions are weak.
+Recommendation: Review share permissions, require SMB signing, disable guest access, patch Windows systems, and restrict access.
+
+9. **Blue Team Remediation Panel**
+   For every weakness, provide defensive guidance:
+
+* Patch system
+* Disable unused services
+* Restrict firewall rules
+* Enforce MFA
+* Remove stale accounts
+* Review privileged groups
+* Rotate service account credentials
+* Apply least privilege
+* Enable logging
+* Monitor failed logins
+* Review access reviews
+
+10. **Search and Filters**
+    Add filtering options:
+
+* Filter by IP
+* Filter by hostname
+* Filter by service
+* Filter by port
+* Filter by difficulty score
+* Filter by risk level
+* Filter by host type
+
+11. **Report Export**
+    Add a button to export a basic report as JSON or Markdown.
+
+Report should include:
+
+* Scan summary
+* Hosts discovered
+* Open services
+* Weaknesses
+* Difficulty scores
+* Identity attack paths
+* Blue team recommendations
+
+12. **UI Layout**
+    Use a layout similar to this:
+
+Left side:
+
+* Upload Nmap scan
+* Filters
+* Start identity selector
+* Target selector
+
+Center:
+
+* Interactive graph
+
+Right side:
+
+* Details panel
+* Weaknesses
+* Difficulty score
+* Recommendations
+* Attack path explanation
+
+Top:
+
+* Dashboard summary cards
+
+13. **Important Safety Requirements**
+    The app must not:
+
+* Run Nmap scans directly against targets
+* Attack systems
+* Provide exploit commands
+* Provide credential theft steps
+* Provide malware
+* Provide real-world compromise instructions
+
+The app may:
+
+* Parse user-provided Nmap XML
+* Visualize services
+* Explain possible risks
+* Simulate attack paths
+* Provide defensive remediation
+* Support homelab learning
+
+14. **README**
+    Create a professional README.md that explains:
+
+* What RedPath Sentinel is
+* Why it was built
+* Features
+* Tech stack
+* How to run it
+* How to upload Nmap XML
+* Example use case
+* Safety statement
+* Future improvements
+
+README description:
+“RedPath Sentinel is a defensive cybersecurity visualization tool that combines Nmap scan analysis, identity risk mapping, and attack path simulation to help understand how exposed services and IAM misconfigurations can create security risk in a homelab or enterprise-style environment.”
+
+15. **Future Improvements Section**
+    Include these future improvement ideas in the README:
+
+* Active Directory CSV import
+* BloodHound JSON import
+* MITRE ATT&CK technique mapping
+* Authentication log import
+* Risk trend history
+* Export to PDF
+* Integration with IAM Sentinel
+* More advanced graph pathfinding
+* User-created custom risk rules
+
+Build the project as a polished working prototype. Prioritize clean UI, working Nmap XML upload/parsing, graph visualization, click-to-view details, weakness mapping, difficulty scoring, and simulated attack path generation.

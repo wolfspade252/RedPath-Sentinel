@@ -1,22 +1,35 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: RedPath Sentinel API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: dashboard
+    description: Dashboard summary
+  - name: scans
+    description: Nmap scan management
+  - name: hosts
+    description: Host discovery and details
+  - name: identities
+    description: Identity and group management
+  - name: attack-paths
+    description: Attack path simulation
+  - name: graph
+    description: Graph data
+  - name: report
+    description: Export report
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,13 +37,631 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /dashboard:
+    get:
+      operationId: getDashboard
+      tags: [dashboard]
+      summary: Get dashboard summary stats
+      responses:
+        "200":
+          description: Dashboard stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardStats"
+
+  /scans:
+    get:
+      operationId: listScans
+      tags: [scans]
+      summary: List all uploaded scans
+      responses:
+        "200":
+          description: List of scans
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Scan"
+    post:
+      operationId: uploadScan
+      tags: [scans]
+      summary: Upload and parse Nmap XML scan
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ScanInput"
+      responses:
+        "201":
+          description: Scan parsed and stored
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Scan"
+        "400":
+          description: Invalid XML
+
+  /scans/{id}:
+    delete:
+      operationId: deleteScan
+      tags: [scans]
+      summary: Delete a scan
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+
+  /hosts:
+    get:
+      operationId: listHosts
+      tags: [hosts]
+      summary: List hosts with optional filters
+      parameters:
+        - name: ipFilter
+          in: query
+          schema:
+            type: string
+        - name: hostnameFilter
+          in: query
+          schema:
+            type: string
+        - name: serviceFilter
+          in: query
+          schema:
+            type: string
+        - name: portFilter
+          in: query
+          schema:
+            type: string
+        - name: scoreFilter
+          in: query
+          schema:
+            type: string
+            enum: [easy, medium, hard]
+        - name: riskFilter
+          in: query
+          schema:
+            type: string
+            enum: [high, medium, low]
+        - name: hostTypeFilter
+          in: query
+          schema:
+            type: string
+            enum: [domain-controller, server, workstation, unknown]
+        - name: scanId
+          in: query
+          schema:
+            type: ["integer", "null"]
+      responses:
+        "200":
+          description: List of hosts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Host"
+
+  /hosts/{id}:
+    get:
+      operationId: getHost
+      tags: [hosts]
+      summary: Get host details with weaknesses and score
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Host detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HostDetail"
+        "404":
+          description: Not found
+
+  /identities/users:
+    get:
+      operationId: listUsers
+      tags: [identities]
+      summary: List identity users
+      responses:
+        "200":
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/IdentityUser"
+
+  /identities/groups:
+    get:
+      operationId: listGroups
+      tags: [identities]
+      summary: List identity groups
+      responses:
+        "200":
+          description: List of groups
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/IdentityGroup"
+
+  /graph:
+    get:
+      operationId: getGraph
+      tags: [graph]
+      summary: Get graph nodes and edges
+      parameters:
+        - name: scanId
+          in: query
+          schema:
+            type: ["integer", "null"]
+      responses:
+        "200":
+          description: Graph data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GraphData"
+
+  /attack-paths:
+    get:
+      operationId: listAttackPaths
+      tags: [attack-paths]
+      summary: List simulated attack paths
+      responses:
+        "200":
+          description: List of attack paths
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AttackPath"
+
+  /attack-paths/simulate:
+    post:
+      operationId: simulateAttackPath
+      tags: [attack-paths]
+      summary: Simulate an identity attack path
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AttackPathSimulationInput"
+      responses:
+        "201":
+          description: Simulated attack path
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AttackPath"
+
+  /attack-paths/{id}:
+    get:
+      operationId: getAttackPath
+      tags: [attack-paths]
+      summary: Get attack path detail
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Attack path detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AttackPath"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteAttackPath
+      tags: [attack-paths]
+      summary: Delete a simulated attack path
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+
+  /report:
+    get:
+      operationId: getReport
+      tags: [report]
+      summary: Get full report data for export
+      responses:
+        "200":
+          description: Report data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Report"
+
 components:
   schemas:
     HealthStatus:
       type: object
+      required: [status]
       properties:
         status:
           type: string
-      required:
-        - status
 
+    DashboardStats:
+      type: object
+      required:
+        - totalHosts
+        - totalOpenPorts
+        - highRiskServices
+        - identityRisks
+        - easyTargets
+        - mediumTargets
+        - hardTargets
+        - totalAttackPaths
+      properties:
+        totalHosts:
+          type: integer
+        totalOpenPorts:
+          type: integer
+        highRiskServices:
+          type: integer
+        identityRisks:
+          type: integer
+        easyTargets:
+          type: integer
+        mediumTargets:
+          type: integer
+        hardTargets:
+          type: integer
+        totalAttackPaths:
+          type: integer
+
+    Scan:
+      type: object
+      required: [id, name, uploadedAt, hostCount]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        uploadedAt:
+          type: string
+        hostCount:
+          type: integer
+        rawXml:
+          type: ["string", "null"]
+
+    ScanInput:
+      type: object
+      required: [name, xmlContent]
+      properties:
+        name:
+          type: string
+        xmlContent:
+          type: string
+
+    ServiceInfo:
+      type: object
+      required: [port, protocol, serviceName]
+      properties:
+        port:
+          type: integer
+        protocol:
+          type: string
+        serviceName:
+          type: string
+        product:
+          type: ["string", "null"]
+        version:
+          type: ["string", "null"]
+        riskLevel:
+          type: ["string", "null"]
+
+    Weakness:
+      type: object
+      required: [port, serviceName, riskLevel, observation, whyItMatters, recommendation]
+      properties:
+        port:
+          type: integer
+        serviceName:
+          type: string
+        riskLevel:
+          type: string
+          enum: [high, medium, low]
+        observation:
+          type: string
+        whyItMatters:
+          type: string
+        recommendation:
+          type: string
+
+    Host:
+      type: object
+      required: [id, ip, status, openPorts, difficultyScore, hostType]
+      properties:
+        id:
+          type: integer
+        ip:
+          type: string
+        hostname:
+          type: ["string", "null"]
+        status:
+          type: string
+        osGuess:
+          type: ["string", "null"]
+        macAddress:
+          type: ["string", "null"]
+        openPorts:
+          type: integer
+        difficultyScore:
+          type: string
+          enum: [easy, medium, hard]
+        hostType:
+          type: string
+          enum: [domain-controller, server, workstation, unknown]
+        services:
+          type: array
+          items:
+            $ref: "#/components/schemas/ServiceInfo"
+        scanId:
+          type: ["integer", "null"]
+        isDemo:
+          type: boolean
+
+    HostDetail:
+      type: object
+      required: [id, ip, status, openPorts, difficultyScore, hostType, services, weaknesses, scoreReason, recommendations]
+      properties:
+        id:
+          type: integer
+        ip:
+          type: string
+        hostname:
+          type: ["string", "null"]
+        status:
+          type: string
+        osGuess:
+          type: ["string", "null"]
+        macAddress:
+          type: ["string", "null"]
+        openPorts:
+          type: integer
+        difficultyScore:
+          type: string
+          enum: [easy, medium, hard]
+        hostType:
+          type: string
+          enum: [domain-controller, server, workstation, unknown]
+        services:
+          type: array
+          items:
+            $ref: "#/components/schemas/ServiceInfo"
+        weaknesses:
+          type: array
+          items:
+            $ref: "#/components/schemas/Weakness"
+        scoreReason:
+          type: string
+        recommendations:
+          type: array
+          items:
+            type: string
+        linkedUsers:
+          type: array
+          items:
+            $ref: "#/components/schemas/IdentityUser"
+        isDemo:
+          type: boolean
+
+    IdentityUser:
+      type: object
+      required: [id, username, privilegeLevel, mfaEnabled, accountType]
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        privilegeLevel:
+          type: string
+          enum: [low, medium, high, admin]
+        mfaEnabled:
+          type: boolean
+        accountType:
+          type: string
+          enum: [standard, helpdesk, service, dormant, admin]
+        groups:
+          type: array
+          items:
+            type: string
+        linkedHosts:
+          type: array
+          items:
+            type: string
+        riskFlags:
+          type: array
+          items:
+            type: string
+
+    IdentityGroup:
+      type: object
+      required: [id, name, memberCount, accessLevel]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        memberCount:
+          type: integer
+        accessLevel:
+          type: string
+        members:
+          type: array
+          items:
+            type: string
+        permissions:
+          type: array
+          items:
+            type: string
+
+    GraphNode:
+      type: object
+      required: [id, type, label]
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [host, service, user, group, admin, weakness, target]
+        label:
+          type: string
+        data:
+          type: object
+          additionalProperties: true
+        riskLevel:
+          type: ["string", "null"]
+
+    GraphEdge:
+      type: object
+      required: [id, source, target, label]
+      properties:
+        id:
+          type: string
+        source:
+          type: string
+        target:
+          type: string
+        label:
+          type: string
+
+    GraphData:
+      type: object
+      required: [nodes, edges]
+      properties:
+        nodes:
+          type: array
+          items:
+            $ref: "#/components/schemas/GraphNode"
+        edges:
+          type: array
+          items:
+            $ref: "#/components/schemas/GraphEdge"
+
+    AttackPathStep:
+      type: object
+      required: [stepNumber, actor, action, target, explanation]
+      properties:
+        stepNumber:
+          type: integer
+        actor:
+          type: string
+        action:
+          type: string
+        target:
+          type: string
+        explanation:
+          type: string
+
+    AttackPath:
+      type: object
+      required: [id, startIdentity, targetHost, steps, riskSummary, controlWeaknesses, defensiveActions, createdAt]
+      properties:
+        id:
+          type: integer
+        startIdentity:
+          type: string
+        targetHost:
+          type: string
+        steps:
+          type: array
+          items:
+            $ref: "#/components/schemas/AttackPathStep"
+        riskSummary:
+          type: string
+        controlWeaknesses:
+          type: array
+          items:
+            type: string
+        defensiveActions:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+
+    AttackPathSimulationInput:
+      type: object
+      required: [startIdentity, targetHost]
+      properties:
+        startIdentity:
+          type: string
+        targetHost:
+          type: string
+
+    ReportHost:
+      type: object
+      required: [ip, hostname, openPorts, services, weaknesses, difficultyScore]
+      properties:
+        ip:
+          type: string
+        hostname:
+          type: ["string", "null"]
+        openPorts:
+          type: integer
+        services:
+          type: array
+          items:
+            $ref: "#/components/schemas/ServiceInfo"
+        weaknesses:
+          type: array
+          items:
+            $ref: "#/components/schemas/Weakness"
+        difficultyScore:
+          type: string
+
+    Report:
+      type: object
+      required: [generatedAt, scanSummary, hosts, attackPaths, recommendations]
+      properties:
+        generatedAt:
+          type: string
+        scanSummary:
+          $ref: "#/components/schemas/DashboardStats"
+        hosts:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReportHost"
+        attackPaths:
+          type: array
+          items:
+            $ref: "#/components/schemas/AttackPath"
+        recommendations:
+          type: array
+          items:
+            type: string
