@@ -1,0 +1,177 @@
+Update RedPath Sentinel’s Graph page UI to match a modern dark “web-style” cybersecurity dashboard.
+
+Goal:
+Keep the current Nmap XML import functionality working, but redesign the graph view so it looks less like a simple square canvas and more like a full security operations web app.
+
+Use the attached/reference design style:
+- Dark navy/black background
+- RedPath Sentinel branding
+- Left navigation sidebar
+- Large central interactive topology graph
+- Right-side details drawer/panel
+- Clean cyber/security aesthetic
+- Color-coded severity badges
+- Professional dashboard layout
+
+Required layout:
+1. Left sidebar
+   - RedPath Sentinel logo/title
+   - Navigation items:
+     - Dashboard
+     - Network Graph
+     - Hosts
+     - Vulnerabilities
+     - Attack Paths
+     - Reports
+     - Settings
+   - Add a scan summary card showing:
+     - Total hosts
+     - Open ports
+     - Vulnerabilities
+     - Critical/High/Medium/Low counts
+     - Last scan file name and timestamp
+
+2. Top bar
+   - Search box: “Search for a host…”
+   - Upload Scan button
+   - New Scan button
+   - Optional theme/settings icons
+
+3. Main graph area
+   - Rename page title to “Network Graph”
+   - Make the graph fill most of the page width and height
+   - Use a web-style topology visualization, not a small boxed square
+   - Add zoom controls
+   - Add a legend at the bottom:
+     - Host
+     - User
+     - Group
+     - Vulnerability
+     - High Risk Path
+   - Color-code nodes:
+     - Hosts = blue/cyan
+     - Users = green
+     - Groups = yellow
+     - High-risk/critical = red
+     - Vulnerabilities/weaknesses = orange
+   - Keep node dragging/clicking working
+   - Keep relationships/edges visible and readable
+
+4. Right-side details panel
+   When a user clicks a node, show detailed information based on the node type.
+
+   For host nodes, show:
+   - Hostname
+   - IP address
+   - OS type
+   - OS version if available from Nmap
+   - Architecture if available
+   - Last scan time
+   - Open ports
+   - Detected services
+   - Service versions if available
+   - Domain role if inferred, such as Domain Controller
+   - Risk level
+
+   For identity/user/group nodes, show:
+   - Account or group name
+   - Type: User / Group / Admin / Service Account
+   - Domain
+   - Privileged status
+   - MFA status:
+     - Enforced
+     - Missing
+     - Unknown
+   - Password reuse:
+     - Detected
+     - Not detected
+     - Unknown
+   - Group memberships
+   - Risk notes
+
+   For weakness/vulnerability nodes, show:
+   - Weakness name
+   - Severity
+   - Affected host/service
+   - Related port
+   - Description
+   - MITRE ATT&CK technique mapping where applicable
+   - Suggested remediation
+
+5. Weakness and vulnerability logic
+   Add a vulnerability/weakness mapping system that uses Nmap services to infer common risks.
+
+   Examples:
+   - Port 445 / SMB:
+     - Weakness: SMB exposure
+     - Possible MITRE mappings:
+       - T1021.002 SMB/Windows Admin Shares
+       - T1550.002 Pass the Hash
+       - T1557 Adversary-in-the-Middle where relevant
+   - Port 389 / LDAP:
+     - Weakness: LDAP exposure
+     - Possible MITRE mappings:
+       - T1087 Account Discovery
+       - T1069 Permission Groups Discovery
+   - Port 88 / Kerberos:
+     - Weakness: Kerberos attack surface
+     - Possible MITRE mappings:
+       - T1558 Steal or Forge Kerberos Tickets
+       - T1558.003 Kerberoasting
+   - Port 5985 / WinRM:
+     - Weakness: Remote management exposed
+     - Possible MITRE mappings:
+       - T1021.006 Windows Remote Management
+   - Port 53 / DNS:
+     - Weakness: DNS service exposed
+     - Possible MITRE mappings:
+       - T1590 Gather Victim Network Information
+   - Port 3389 / RDP:
+     - Weakness: RDP exposed
+     - Possible MITRE mappings:
+       - T1021.001 Remote Desktop Protocol
+
+   Make it clear these are “potential findings” based on service exposure, not confirmed exploitation.
+
+6. Hack difficulty score
+   At the bottom of the right-side details panel, add a “Hack Difficulty Score.”
+
+   Score should be from 0 to 10:
+   - 0–3 = Low difficulty
+   - 4–6 = Medium difficulty
+   - 7–10 = High risk / easier target from attacker perspective
+
+   Base the score on:
+   - Number of open ports
+   - Presence of AD services
+   - Exposed remote access services
+   - Privileged identity relationships
+   - Missing MFA
+   - Password reuse
+   - Severity of weaknesses
+   - Whether the host appears to be a Domain Controller
+
+   Show:
+   - Numeric score
+   - Difficulty label
+   - Short explanation of why the score was assigned
+
+7. Important functionality requirements
+   - Do not remove the current Nmap XML drag-and-drop import.
+   - Do not break existing graph parsing.
+   - Keep existing mock identity/attack path demo data if no imported data exists.
+   - If imported Nmap data exists, merge it into the graph.
+   - Clicking any node should update the right-side details panel.
+   - Add fallback values like “Unknown” when data is unavailable.
+   - Make the layout responsive for laptop screens.
+
+8. Visual polish
+   - Use cards with subtle borders
+   - Use clean spacing
+   - Use readable fonts
+   - Use cyber-style accent colors
+   - Avoid cluttered overlapping labels where possible
+   - Add hover effects for nodes and sidebar items
+   - Keep the interface professional enough for a GitHub portfolio screenshot
+
+Do not rebuild the entire project from scratch. Modify the existing RedPath Sentinel project and preserve current working behavior.
